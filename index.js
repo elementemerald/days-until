@@ -2,12 +2,12 @@ const { Plugin } = require('powercord/entities');
 const { getModule, React } = require('powercord/webpack');
 const { inject, uninject } = require('powercord/injector');
 
+const Custom = getModule(["CustomStatusSetting"], false).CustomStatusSetting;
 let oldstatus = ""
 
 const Settings = require('./components/Settings');
 
 module.exports = class daysuntil extends Plugin {
-
 	async startPlugin() {
 		this.loadStylesheet('style.scss');
 
@@ -20,10 +20,10 @@ module.exports = class daysuntil extends Plugin {
 			})
 		});
 
-		this.start();
+		this.update();
 	}
 
-	async start() {
+	async update() {
 		if (this.settings.get('time')) {
 			var date = new Date()
 			let longhour = date.getHours().toString()
@@ -65,13 +65,13 @@ module.exports = class daysuntil extends Plugin {
 			}
 		}
 
-		setTimeout(() => {
-			this.start();
+		this.timeout = setTimeout(() => {
+			this.update();
 		}, 5000);
 	}
 
 	status(text) {
-		require('powercord/webpack').getModule(["CustomStatusSetting"], false).CustomStatusSetting.updateSetting(
+		Custom.updateSetting(
 			{
 				"text": text,
 				"emojiId": "0",
@@ -81,7 +81,13 @@ module.exports = class daysuntil extends Plugin {
 		);
 	}
 
+	clearStatus() {
+		Custom.updateSetting();
+	}
+
 	pluginWillUnload() {
+		clearTimeout(this.timeout);
+		this.clearStatus();
 		powercord.api.settings.unregisterSettings(this.entityID);
 	}
 }
